@@ -14,13 +14,13 @@ public class Problema {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column (nullable = false)
+    @Column (nullable = false) // Não podem ser nulos!
     private String descricao;
 
-    @Column (nullable = false)
+    @Column (nullable = false) // Não podem ser nulos!
     private String tipoProblema;
 
-    @Column (nullable = false)
+    @Column (nullable = false) // Não podem ser nulos!
     private LocalDateTime dataRegistro;
 
     @Column
