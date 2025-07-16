@@ -7,12 +7,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal; // Para lidar com valores monetários
-import java.util.List; // Para retornar listas
-import java.util.Optional; // Para lidar com objetos que podem não existir
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/caixa")
+@CrossOrigin(origins = {"http://localhost:4200", "http://localhost:4201", "http://localhost:4202",
+        "http://localhost:4203", "http://localhost:4204", "http://localhost:4205",
+        "http://localhost:56235", "http://localhost:8080"}) // Mantenha as portas que você configurou
 public class FechamentoCaixaController {
 
     private final FechamentoCaixaService fechamentoCaixaService;
@@ -22,10 +25,6 @@ public class FechamentoCaixaController {
         this.fechamentoCaixaService = fechamentoCaixaService;
     }
 
-    // --- ENDPOINTS DA API ---
-
-    // 1. Abrir um novo Caixa (Método POST)
-    // Corpo da requisição: { "valorInicialTroco": 100.00, "responsavel": "Nome do Atendente" }
     @PostMapping("/abrir")
     public ResponseEntity<FechamentoCaixa> abrirCaixa(@RequestBody FechamentoCaixa request) {
         try {
@@ -33,29 +32,30 @@ public class FechamentoCaixaController {
                     request.getValorInicialTroco(),
                     request.getResponsavelFechamento()
             );
-            return ResponseEntity.status(HttpStatus.CREATED).body(novoCaixa); // Retorna 201 Created
+            return ResponseEntity.status(HttpStatus.CREATED).body(novoCaixa);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Retorna 400 Bad Request
+            System.err.println("Erro ao abrir caixa no backend: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
-    // 2. Fechar um Caixa existente (Método PUT)
-    // Corpo da requisição: { "totalVendasEVO": 1500.00, "responsavel": "Nome do Atendente" }
     @PutMapping("/fechar/{idCaixa}")
     public ResponseEntity<FechamentoCaixa> fecharCaixa(@PathVariable Long idCaixa, @RequestBody FechamentoCaixa request) {
         try {
             FechamentoCaixa caixaFechado = fechamentoCaixaService.fecharCaixa(
                     idCaixa,
-                    request.getTotalVendasEVO(), // Total do EVO, input manual para a demo
-                    request.getResponsavelFechamento()
+                    request.getTotalVendasEVO(),
+                    request.getResponsavelFechamento(),
+                    request.getObservacoes() // 👈 ATENÇÃO AQUI! Passando as observações
             );
             return ResponseEntity.ok(caixaFechado);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            System.err.println("Erro ao fechar caixa no backend: " + e.getMessage());
+            // Retorna 404 se o caixa não for encontrado, ou 400 para outros erros de lógica
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
-    // 3. Buscar um Fechamento de Caixa por ID (Método GET)
     @GetMapping("/{id}")
     public ResponseEntity<FechamentoCaixa> buscarFechamentoCaixaPorId(@PathVariable Long id) {
         Optional<FechamentoCaixa> fechamentoCaixa = fechamentoCaixaService.buscarFechamentoCaixaPorId(id);
@@ -63,14 +63,12 @@ public class FechamentoCaixaController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // 4. Buscar todos os Fechamentos de Caixa (Método GET)
     @GetMapping
     public ResponseEntity<List<FechamentoCaixa>> buscarTodosFechamentosCaixa() {
         List<FechamentoCaixa> fechamentos = fechamentoCaixaService.buscarTodosFechamentosCaixa();
         return ResponseEntity.ok(fechamentos);
     }
 
-    // 5. Buscar o Caixa Aberto (Método GET) - Simplificado para a demo
     @GetMapping("/aberto")
     public ResponseEntity<FechamentoCaixa> buscarCaixaAberto() {
         Optional<FechamentoCaixa> caixaAberto = fechamentoCaixaService.buscarCaixaAberto();

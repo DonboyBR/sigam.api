@@ -17,7 +17,7 @@ public class Ativo{
     private String nome;
 
     @Column (nullable = false)
-    private String LocalFisico;
+    private String localFisico;
 
     @Column
     private String departamento;
